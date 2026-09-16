@@ -1,0 +1,12 @@
+# 原始数据不入库：运行 python/01_data_quality.py 会自动从 Olist 官方仓库下载
+data/*.csv
+
+# 分析中间产物（可由脚本重新生成）
+output/*.csv
+output/report_data.json
+
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+.venv/
