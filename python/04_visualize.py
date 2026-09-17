@@ -60,8 +60,8 @@ print("生成图表 ...")
 ov = q("""
 SELECT COUNT(DISTINCT order_id) orders, COUNT(DISTINCT customer_unique_id) customers,
  SUM(order_amount)/1e6 gmv_m, AVG(order_amount) aov, AVG(review_score) score,
- AVG(CASE WHEN is_late THEN 1.0 ELSE 0 END)*100 late_rate,
- AVG(CASE WHEN is_bad_review THEN 1.0 ELSE 0 END)*100 bad_rate,
+ AVG(is_late_int)*100 late_rate,
+ AVG(is_bad_int)*100 bad_rate,
  AVG(delivery_days) del_days FROM dwd_order
 """).iloc[0]
 R["overview"] = {k: (round(float(v), 3) if isinstance(v, (float, np.floating)) else int(v))
@@ -72,8 +72,8 @@ R["items"] = int(q("SELECT COUNT(*) n FROM dwd_order_item").iloc[0].n)
 # ------------------------------------------------ 1 延迟 vs 评分
 late = q("""
 SELECT is_late, COUNT(*) n, AVG(review_score) score,
- AVG(CASE WHEN is_bad_review THEN 1.0 ELSE 0 END)*100 bad,
- AVG(CASE WHEN is_top_review THEN 1.0 ELSE 0 END)*100 top5,
+ AVG(is_bad_int)*100 bad,
+ AVG(is_top_int)*100 top5,
  AVG(delivery_days) avg_days
 FROM dwd_order WHERE delivered_ts IS NOT NULL AND review_score IS NOT NULL
 GROUP BY 1 ORDER BY 1
@@ -105,7 +105,7 @@ SELECT CASE WHEN days_early>=15 THEN '提前15天+' WHEN days_early>=8 THEN '提
  WHEN days_early>=0 THEN 4 WHEN days_early>=-3 THEN 5 WHEN days_early>=-7 THEN 6
  WHEN days_early>=-15 THEN 7 ELSE 8 END ord,
  COUNT(*) n, AVG(review_score) score,
- AVG(CASE WHEN is_bad_review THEN 1.0 ELSE 0 END)*100 bad
+ AVG(is_bad_int)*100 bad
 FROM dwd_order WHERE delivered_ts IS NOT NULL AND review_score IS NOT NULL
 GROUP BY 1,2 ORDER BY ord
 """)
@@ -129,7 +129,7 @@ save(fig, "02_dose_response.png")
 mon = q("""
 SELECT STRFTIME(purchase_month,'%Y-%m') mon, COUNT(*) orders,
  SUM(order_amount)/1e4 gmv_w, AVG(review_score) score,
- AVG(CASE WHEN is_late THEN 1.0 ELSE 0 END)*100 late_rate,
+ AVG(is_late_int)*100 late_rate,
  AVG(delivery_days) del_days, AVG(carrier_transit_days) transit,
  AVG(seller_handling_days) handling
 FROM dwd_order GROUP BY 1 ORDER BY 1
@@ -270,7 +270,7 @@ save(fig, "07_repurchase_definition.png")
 # ------------------------------------------------ 7 州级
 st = q("""
 SELECT customer_state st, COUNT(*) n, AVG(delivery_days) avg_days,
- AVG(CASE WHEN is_late THEN 1.0 ELSE 0 END)*100 late_rate, AVG(review_score) score,
+ AVG(is_late_int)*100 late_rate, AVG(review_score) score,
  SUM(order_amount)/1e4 gmv_w
 FROM dwd_order WHERE delivered_ts IS NOT NULL GROUP BY 1 HAVING COUNT(*)>=300
 ORDER BY avg_days DESC""")
@@ -311,7 +311,7 @@ if os.path.exists("output/review_driver_groups.csv"):
 # ------------------------------------------------ 9 其他结论
 R["categories"] = q("""
 SELECT category_en cat, SUM(item_amount)/1e4 gmv_w, COUNT(DISTINCT order_id) orders,
- AVG(review_score) score, AVG(CASE WHEN is_late THEN 1.0 ELSE 0 END)*100 late_rate
+ AVG(review_score) score, AVG(is_late_int)*100 late_rate
 FROM dwd_order_item GROUP BY 1 ORDER BY gmv_w DESC LIMIT 12
 """).round(3).to_dict("records")
 
@@ -326,7 +326,7 @@ GROUP BY 1 ORDER BY 1""").round(3).to_dict("records")
 R["seller_tiers"] = q("""
 WITH s AS (SELECT i.seller_id, COUNT(DISTINCT i.order_id) orders,
  SUM(i.item_amount) gmv, AVG(o.review_score) score,
- AVG(CASE WHEN o.is_late THEN 1.0 ELSE 0 END) late
+ AVG(o.is_late_int) late
  FROM dwd_order_item i JOIN dwd_order o ON i.order_id=o.order_id GROUP BY 1)
 SELECT CASE WHEN orders>=500 THEN '头部(500单+)' WHEN orders>=100 THEN '腰部(100-499)'
  WHEN orders>=20 THEN '长尾(20-99)' ELSE '零星(<20)' END tier,
@@ -339,7 +339,7 @@ SELECT CASE WHEN promised_days<=10 THEN '承诺10天内' WHEN promised_days<=20 
  CASE WHEN promised_days<=10 THEN 1 WHEN promised_days<=20 THEN 2
  WHEN promised_days<=30 THEN 3 ELSE 4 END ord,
  COUNT(*) n, AVG(delivery_days) actual, AVG(days_early) buffer,
- AVG(CASE WHEN is_late THEN 1.0 ELSE 0 END)*100 late_rate, AVG(review_score) score
+ AVG(is_late_int)*100 late_rate, AVG(review_score) score
 FROM dwd_order WHERE delivered_ts IS NOT NULL AND promised_days IS NOT NULL
 GROUP BY 1,2 ORDER BY ord""").round(3).to_dict("records")
 
@@ -347,7 +347,7 @@ R["cross_state"] = q("""
 WITH oi AS (SELECT order_id, MAX(CASE WHEN seller_state=customer_state THEN 0 ELSE 1 END) cs
  FROM dwd_order_item WHERE seller_state IS NOT NULL GROUP BY 1)
 SELECT CASE WHEN cs=1 THEN '跨州配送' ELSE '同州配送' END t, COUNT(*) n,
- AVG(o.delivery_days) avg_days, AVG(CASE WHEN o.is_late THEN 1.0 ELSE 0 END)*100 late_rate,
+ AVG(o.delivery_days) avg_days, AVG(o.is_late_int)*100 late_rate,
  AVG(o.review_score) score
 FROM dwd_order o JOIN oi ON o.order_id=oi.order_id
 WHERE o.delivered_ts IS NOT NULL GROUP BY 1""").round(3).to_dict("records")

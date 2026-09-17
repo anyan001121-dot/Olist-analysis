@@ -42,7 +42,7 @@ WITH s AS (
         COUNT(DISTINCT i.order_id)                                  AS orders,
         SUM(i.item_amount)                                          AS gmv,
         AVG(o.review_score)                                         AS avg_score,
-        AVG(CASE WHEN o.is_late THEN 1.0 ELSE 0 END)                AS late_rate,
+        AVG(o.is_late_int)                AS late_rate,
         AVG(o.seller_handling_days)                                 AS handling_days,
         AVG(i.freight_value / NULLIF(i.price, 0))                   AS freight_ratio
     FROM dwd_order_item i
@@ -76,8 +76,8 @@ WITH s AS (
         COUNT(DISTINCT i.order_id)                                  AS orders,
         SUM(i.item_amount)                                          AS gmv,
         AVG(o.review_score)                                         AS avg_score,
-        AVG(CASE WHEN o.is_late THEN 1.0 ELSE 0 END)                AS late_rate,
-        AVG(CASE WHEN o.is_bad_review THEN 1.0 ELSE 0 END)          AS bad_rate,
+        AVG(o.is_late_int)                AS late_rate,
+        AVG(o.is_bad_int)          AS bad_rate,
         AVG(o.seller_handling_days)                                 AS handling_days,
         AVG(o.delivery_days)                                        AS delivery_days
     FROM dwd_order_item i
@@ -107,8 +107,8 @@ WITH s AS (
     SELECT
         i.seller_id,
         COUNT(DISTINCT i.order_id)                                  AS orders,
-        AVG(CASE WHEN o.is_late THEN 1.0 ELSE 0 END)                AS late_rate,
-        AVG(CASE WHEN o.is_bad_review THEN 1.0 ELSE 0 END)          AS bad_rate
+        AVG(o.is_late_int)                AS late_rate,
+        AVG(o.is_bad_int)          AS bad_rate
     FROM dwd_order_item i
     JOIN dwd_order o ON i.order_id = o.order_id
     WHERE o.delivered_ts IS NOT NULL
@@ -143,7 +143,7 @@ SELECT
     ROUND(SUM(item_amount) / 1e4, 1)                                AS GMV_万,
     ROUND(SUM(item_amount) * 100.0 / SUM(SUM(item_amount)) OVER (), 2) AS GMV占比_pct,
     ROUND(AVG(review_score), 3)                                     AS 平均评分,
-    ROUND(AVG(CASE WHEN is_late THEN 1.0 ELSE 0 END) * 100, 2)      AS 延迟率_pct,
+    ROUND(AVG(is_late_int) * 100, 2)      AS 延迟率_pct,
     ROUND(AVG(delivery_days), 1)                                    AS 平均送达天数
 FROM dwd_order_item
 WHERE seller_state IS NOT NULL
@@ -163,7 +163,7 @@ SELECT
     ROUND(AVG(freight_value), 2)                                    AS 平均运费,
     ROUND(AVG(freight_value / NULLIF(price, 0)) * 100, 1)           AS 运费价格比_pct,
     ROUND(AVG(delivery_days), 1)                                    AS 平均送达天数,
-    ROUND(AVG(CASE WHEN is_late THEN 1.0 ELSE 0 END) * 100, 2)      AS 延迟率_pct,
+    ROUND(AVG(is_late_int) * 100, 2)      AS 延迟率_pct,
     ROUND(AVG(review_score), 3)                                     AS 平均评分
 FROM dwd_order_item
 GROUP BY category_en
