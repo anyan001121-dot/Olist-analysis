@@ -1,0 +1,944 @@
+{
+  "overview": {
+    "orders": 97905.0,
+    "customers": 94703.0,
+    "gmv_m": 15.688,
+    "aov": 160.241,
+    "score": 4.118,
+    "late_rate": 7.989,
+    "bad_rate": 13.725,
+    "del_days": 12.477
+  },
+  "sellers": 3029,
+  "items": 111752,
+  "late_vs_review": [
+    {
+      "is_late": 0,
+      "n": 87902,
+      "score": 4.295,
+      "bad": 9.194,
+      "top5": 62.471,
+      "avg_days": 10.79
+    },
+    {
+      "is_late": 1,
+      "n": 7658,
+      "score": 2.568,
+      "bad": 54.009,
+      "top5": 22.277,
+      "avg_days": 31.326
+    }
+  ],
+  "dose_response": [
+    {
+      "bucket": "提前15天+",
+      "ord": 1,
+      "n": 34526,
+      "score": 4.325,
+      "bad": 9.013
+    },
+    {
+      "bucket": "提前8-14天",
+      "ord": 2,
+      "n": 36147,
+      "score": 4.312,
+      "bad": 8.878
+    },
+    {
+      "bucket": "提前3-7天",
+      "ord": 3,
+      "n": 14240,
+      "score": 4.215,
+      "bad": 9.965
+    },
+    {
+      "bucket": "提前0-2天",
+      "ord": 4,
+      "n": 4269,
+      "score": 4.109,
+      "bad": 11.712
+    },
+    {
+      "bucket": "延迟1-3天",
+      "ord": 5,
+      "n": 1851,
+      "score": 3.291,
+      "bad": 32.199
+    },
+    {
+      "bucket": "延迟4-7天",
+      "ord": 6,
+      "n": 1748,
+      "score": 2.106,
+      "bad": 67.563
+    },
+    {
+      "bucket": "延迟8-15天",
+      "ord": 7,
+      "n": 1601,
+      "score": 1.676,
+      "bad": 79.95
+    },
+    {
+      "bucket": "延迟15天+",
+      "ord": 8,
+      "n": 1178,
+      "score": 1.732,
+      "bad": 78.183
+    }
+  ],
+  "monthly": [
+    {
+      "mon": "2017-01",
+      "orders": 787,
+      "gmv_w": 13.694,
+      "score": 4.094,
+      "late_rate": 2.922,
+      "del_days": 12.753,
+      "transit": 9.172,
+      "handling": 3.008
+    },
+    {
+      "mon": "2017-02",
+      "orders": 1718,
+      "gmv_w": 28.356,
+      "score": 4.101,
+      "late_rate": 3.085,
+      "del_days": 13.3,
+      "transit": 9.515,
+      "handling": 3.335
+    },
+    {
+      "mon": "2017-03",
+      "orders": 2617,
+      "gmv_w": 42.562,
+      "score": 4.133,
+      "late_rate": 5.426,
+      "del_days": 13.044,
+      "transit": 9.795,
+      "handling": 2.961
+    },
+    {
+      "mon": "2017-04",
+      "orders": 2377,
+      "gmv_w": 40.585,
+      "score": 4.069,
+      "late_rate": 7.615,
+      "del_days": 15.023,
+      "transit": 11.222,
+      "handling": 3.186
+    },
+    {
+      "mon": "2017-05",
+      "orders": 3640,
+      "gmv_w": 58.271,
+      "score": 4.181,
+      "late_rate": 3.516,
+      "del_days": 11.427,
+      "transit": 8.319,
+      "handling": 2.6
+    },
+    {
+      "mon": "2017-06",
+      "orders": 3205,
+      "gmv_w": 49.965,
+      "score": 4.178,
+      "late_rate": 3.775,
+      "del_days": 12.013,
+      "transit": 8.823,
+      "handling": 2.709
+    },
+    {
+      "mon": "2017-07",
+      "orders": 3946,
+      "gmv_w": 57.875,
+      "score": 4.228,
+      "late_rate": 3.371,
+      "del_days": 11.489,
+      "transit": 8.449,
+      "handling": 2.538
+    },
+    {
+      "mon": "2017-08",
+      "orders": 4272,
+      "gmv_w": 66.199,
+      "score": 4.266,
+      "late_rate": 3.254,
+      "del_days": 11.016,
+      "transit": 8.05,
+      "handling": 2.488
+    },
+    {
+      "mon": "2017-09",
+      "orders": 4227,
+      "gmv_w": 71.71,
+      "score": 4.221,
+      "late_rate": 5.11,
+      "del_days": 11.723,
+      "transit": 8.639,
+      "handling": 2.529
+    },
+    {
+      "mon": "2017-10",
+      "orders": 4547,
+      "gmv_w": 76.486,
+      "score": 4.176,
+      "late_rate": 5.212,
+      "del_days": 11.733,
+      "transit": 8.41,
+      "handling": 2.832
+    },
+    {
+      "mon": "2017-11",
+      "orders": 7421,
+      "gmv_w": 117.339,
+      "score": 3.951,
+      "late_rate": 14.055,
+      "del_days": 15.073,
+      "transit": 11.114,
+      "handling": 3.415
+    },
+    {
+      "mon": "2017-12",
+      "orders": 5618,
+      "gmv_w": 86.23,
+      "score": 4.043,
+      "late_rate": 8.224,
+      "del_days": 15.306,
+      "transit": 11.7,
+      "handling": 3.071
+    },
+    {
+      "mon": "2018-01",
+      "orders": 7187,
+      "gmv_w": 110.248,
+      "score": 4.069,
+      "late_rate": 6.456,
+      "del_days": 14.006,
+      "transit": 10.483,
+      "handling": 3.008
+    },
+    {
+      "mon": "2018-02",
+      "orders": 6624,
+      "gmv_w": 98.015,
+      "score": 3.861,
+      "late_rate": 15.821,
+      "del_days": 16.873,
+      "transit": 13.381,
+      "handling": 3.012
+    },
+    {
+      "mon": "2018-03",
+      "orders": 7168,
+      "gmv_w": 115.279,
+      "score": 3.765,
+      "late_rate": 20.871,
+      "del_days": 16.238,
+      "transit": 12.973,
+      "handling": 2.822
+    },
+    {
+      "mon": "2018-04",
+      "orders": 6919,
+      "gmv_w": 115.663,
+      "score": 4.17,
+      "late_rate": 5.218,
+      "del_days": 11.419,
+      "transit": 8.622,
+      "handling": 2.117
+    },
+    {
+      "mon": "2018-05",
+      "orders": 6833,
+      "gmv_w": 114.616,
+      "score": 4.21,
+      "late_rate": 8.137,
+      "del_days": 11.336,
+      "transit": 8.571,
+      "handling": 2.304
+    },
+    {
+      "mon": "2018-06",
+      "orders": 6145,
+      "gmv_w": 102.061,
+      "score": 4.288,
+      "late_rate": 1.351,
+      "del_days": 9.165,
+      "transit": 6.524,
+      "handling": 2.206
+    },
+    {
+      "mon": "2018-07",
+      "orders": 6233,
+      "gmv_w": 103.982,
+      "score": 4.29,
+      "late_rate": 4.428,
+      "del_days": 8.888,
+      "transit": 5.982,
+      "handling": 2.281
+    },
+    {
+      "mon": "2018-08",
+      "orders": 6421,
+      "gmv_w": 99.704,
+      "score": 4.288,
+      "late_rate": 10.279,
+      "del_days": 7.658,
+      "transit": 5.073,
+      "handling": 2.154
+    }
+  ],
+  "delivery_legs": [
+    {
+      "grp": "延迟送达",
+      "approve": 0.513,
+      "handling": 5.176,
+      "transit": 25.67,
+      "total_days": 31.459
+    },
+    {
+      "grp": "按时/提前",
+      "approve": 0.419,
+      "handling": 2.451,
+      "transit": 7.843,
+      "total_days": 10.796
+    }
+  ],
+  "delay_attribution": {
+    "seller_excess": 3.18,
+    "carrier_excess": 18.67,
+    "seller_pct": 14.54,
+    "carrier_pct": 85.46
+  },
+  "psm_att": [
+    {
+      "方法": "朴素对比（有偏）",
+      "ATT_pp": 44.92
+    },
+    {
+      "方法": "倾向得分匹配 PSM",
+      "ATT_pp": 45.05
+    },
+    {
+      "方法": "逆概率加权 IPW",
+      "ATT_pp": 44.85
+    },
+    {
+      "方法": "回归调整",
+      "ATT_pp": 44.38
+    }
+  ],
+  "psm_balance": {
+    "n_cov": 110,
+    "before_gt01": 24,
+    "after_gt01": 0,
+    "max_before": 0.3987,
+    "max_after": 0.0449,
+    "top": [
+      {
+        "协变量": "purchase_month_2018-03-01",
+        "匹配前SMD": 0.3987,
+        "匹配后SMD": 0.0316,
+        "改善": 0.367
+      },
+      {
+        "协变量": "seller_late_rate_loo",
+        "匹配前SMD": 0.3566,
+        "匹配后SMD": 0.0124,
+        "改善": 0.3442
+      },
+      {
+        "协变量": "purchase_month_2018-06-01",
+        "匹配前SMD": 0.2951,
+        "匹配后SMD": 0.0066,
+        "改善": 0.2884
+      },
+      {
+        "协变量": "customer_state_SP",
+        "匹配前SMD": 0.2665,
+        "匹配后SMD": 0.0076,
+        "改善": 0.2588
+      },
+      {
+        "协变量": "purchase_month_2018-02-01",
+        "匹配前SMD": 0.2477,
+        "匹配后SMD": 0.0023,
+        "改善": 0.2453
+      },
+      {
+        "协变量": "customer_state_RJ",
+        "匹配前SMD": 0.2504,
+        "匹配后SMD": 0.0059,
+        "改善": 0.2445
+      },
+      {
+        "协变量": "cross_state",
+        "匹配前SMD": 0.2143,
+        "匹配后SMD": 0.0006,
+        "改善": 0.2137
+      },
+      {
+        "协变量": "promised_days",
+        "匹配前SMD": 0.2178,
+        "匹配后SMD": 0.0095,
+        "改善": 0.2083
+      }
+    ]
+  },
+  "repurchase": {
+    "wrong_key": 0.0,
+    "surface": 3.035,
+    "real_rate": 2.168
+  },
+  "states": [
+    {
+      "st": "AL",
+      "n": 396,
+      "avg_days": 24.48,
+      "late_rate": 23.99,
+      "score": 3.858,
+      "gmv_w": 9.427
+    },
+    {
+      "st": "PA",
+      "n": 942,
+      "avg_days": 23.709,
+      "late_rate": 12.42,
+      "score": 3.904,
+      "gmv_w": 21.074
+    },
+    {
+      "st": "MA",
+      "n": 713,
+      "avg_days": 21.474,
+      "late_rate": 19.635,
+      "score": 3.831,
+      "gmv_w": 14.68
+    },
+    {
+      "st": "SE",
+      "n": 332,
+      "avg_days": 21.38,
+      "late_rate": 15.361,
+      "score": 3.9,
+      "gmv_w": 6.994
+    },
+    {
+      "st": "CE",
+      "n": 1273,
+      "avg_days": 21.171,
+      "late_rate": 15.397,
+      "score": 3.935,
+      "gmv_w": 26.471
+    },
+    {
+      "st": "PB",
+      "n": 516,
+      "avg_days": 20.357,
+      "late_rate": 11.047,
+      "score": 4.074,
+      "gmv_w": 13.776
+    },
+    {
+      "st": "PI",
+      "n": 475,
+      "avg_days": 19.379,
+      "late_rate": 16.0,
+      "score": 3.994,
+      "gmv_w": 10.493
+    },
+    {
+      "st": "BA",
+      "n": 3253,
+      "avg_days": 19.277,
+      "late_rate": 14.049,
+      "score": 3.93,
+      "gmv_w": 59.082
+    },
+    {
+      "st": "RN",
+      "n": 470,
+      "avg_days": 19.157,
+      "late_rate": 10.851,
+      "score": 4.143,
+      "gmv_w": 9.996
+    },
+    {
+      "st": "PE",
+      "n": 1587,
+      "avg_days": 18.397,
+      "late_rate": 10.838,
+      "score": 4.081,
+      "gmv_w": 30.773
+    },
+    {
+      "st": "MT",
+      "n": 885,
+      "avg_days": 18.016,
+      "late_rate": 6.78,
+      "score": 4.146,
+      "gmv_w": 18.112
+    },
+    {
+      "st": "ES",
+      "n": 1992,
+      "avg_days": 15.71,
+      "late_rate": 12.249,
+      "score": 4.081,
+      "gmv_w": 31.671
+    },
+    {
+      "st": "MS",
+      "n": 701,
+      "avg_days": 15.545,
+      "late_rate": 11.555,
+      "score": 4.163,
+      "gmv_w": 13.438
+    },
+    {
+      "st": "GO",
+      "n": 1950,
+      "avg_days": 15.541,
+      "late_rate": 8.205,
+      "score": 4.103,
+      "gmv_w": 33.361
+    },
+    {
+      "st": "RS",
+      "n": 5327,
+      "avg_days": 15.237,
+      "late_rate": 7.171,
+      "score": 4.187,
+      "gmv_w": 85.864
+    },
+    {
+      "st": "RJ",
+      "n": 12310,
+      "avg_days": 15.224,
+      "late_rate": 13.517,
+      "score": 3.964,
+      "gmv_w": 204.659
+    },
+    {
+      "st": "SC",
+      "n": 3537,
+      "avg_days": 14.894,
+      "late_rate": 9.782,
+      "score": 4.134,
+      "gmv_w": 59.263
+    },
+    {
+      "st": "DF",
+      "n": 2074,
+      "avg_days": 12.87,
+      "late_rate": 7.088,
+      "score": 4.139,
+      "gmv_w": 34.523
+    },
+    {
+      "st": "MG",
+      "n": 11319,
+      "avg_days": 11.92,
+      "late_rate": 5.628,
+      "score": 4.194,
+      "gmv_w": 181.442
+    },
+    {
+      "st": "PR",
+      "n": 4903,
+      "avg_days": 11.919,
+      "late_rate": 5.017,
+      "score": 4.24,
+      "gmv_w": 77.936
+    },
+    {
+      "st": "SP",
+      "n": 40399,
+      "avg_days": 8.677,
+      "late_rate": 5.901,
+      "score": 4.248,
+      "gmv_w": 575.683
+    }
+  ],
+  "warn_lift": [
+    {
+      "decile": "D1",
+      "订单数": 2112,
+      "差评数": 519,
+      "预测均值": 0.2806,
+      "实际差评率": 24.57,
+      "提升度": 2.43,
+      "累计捕获_pct": 24.33
+    },
+    {
+      "decile": "D2",
+      "订单数": 2111,
+      "差评数": 254,
+      "预测均值": 0.188,
+      "实际差评率": 12.03,
+      "提升度": 1.19,
+      "累计捕获_pct": 36.24
+    },
+    {
+      "decile": "D3",
+      "订单数": 2111,
+      "差评数": 231,
+      "预测均值": 0.1594,
+      "实际差评率": 10.94,
+      "提升度": 1.08,
+      "累计捕获_pct": 47.07
+    },
+    {
+      "decile": "D4",
+      "订单数": 2111,
+      "差评数": 201,
+      "预测均值": 0.1425,
+      "实际差评率": 9.52,
+      "提升度": 0.94,
+      "累计捕获_pct": 56.49
+    },
+    {
+      "decile": "D5",
+      "订单数": 2112,
+      "差评数": 211,
+      "预测均值": 0.1294,
+      "实际差评率": 9.99,
+      "提升度": 0.99,
+      "累计捕获_pct": 66.39
+    },
+    {
+      "decile": "D6",
+      "订单数": 2111,
+      "差评数": 169,
+      "预测均值": 0.12,
+      "实际差评率": 8.01,
+      "提升度": 0.79,
+      "累计捕获_pct": 74.31
+    },
+    {
+      "decile": "D7",
+      "订单数": 2111,
+      "差评数": 162,
+      "预测均值": 0.1114,
+      "实际差评率": 7.67,
+      "提升度": 0.76,
+      "累计捕获_pct": 81.9
+    },
+    {
+      "decile": "D8",
+      "订单数": 2111,
+      "差评数": 141,
+      "预测均值": 0.1031,
+      "实际差评率": 6.68,
+      "提升度": 0.66,
+      "累计捕获_pct": 88.51
+    },
+    {
+      "decile": "D9",
+      "订单数": 2111,
+      "差评数": 122,
+      "预测均值": 0.0947,
+      "实际差评率": 5.78,
+      "提升度": 0.57,
+      "累计捕获_pct": 94.23
+    },
+    {
+      "decile": "D10",
+      "订单数": 2112,
+      "差评数": 123,
+      "预测均值": 0.0881,
+      "实际差评率": 5.82,
+      "提升度": 0.58,
+      "累计捕获_pct": 100.0
+    }
+  ],
+  "warn_metrics": [
+    {
+      "模型": "A_含履约结果",
+      "AUC": 0.732,
+      "KS": 0.3528,
+      "PR_AUC": 0.3447
+    },
+    {
+      "模型": "B_仅下单时特征",
+      "AUC": 0.636,
+      "KS": 0.1922,
+      "PR_AUC": 0.196
+    }
+  ],
+  "driver_groups": [
+    {
+      "归类": "履约表现",
+      "占比_pct": 67.56
+    },
+    {
+      "归类": "订单与支付",
+      "占比_pct": 16.67
+    },
+    {
+      "归类": "卖家历史",
+      "占比_pct": 7.17
+    },
+    {
+      "归类": "商品属性",
+      "占比_pct": 6.26
+    },
+    {
+      "归类": "地理距离",
+      "占比_pct": 2.32
+    }
+  ],
+  "categories": [
+    {
+      "cat": "health_beauty",
+      "gmv_w": 143.239,
+      "orders": 8757,
+      "score": 4.155,
+      "late_rate": 8.899
+    },
+    {
+      "cat": "watches_gifts",
+      "gmv_w": 129.482,
+      "orders": 5599,
+      "score": 4.027,
+      "late_rate": 8.131
+    },
+    {
+      "cat": "bed_bath_table",
+      "gmv_w": 123.978,
+      "orders": 9394,
+      "score": 3.903,
+      "late_rate": 8.297
+    },
+    {
+      "cat": "sports_leisure",
+      "gmv_w": 114.642,
+      "orders": 7656,
+      "score": 4.122,
+      "late_rate": 7.29
+    },
+    {
+      "cat": "computers_accessories",
+      "gmv_w": 104.92,
+      "orders": 6636,
+      "score": 3.951,
+      "late_rate": 7.642
+    },
+    {
+      "cat": "furniture_decor",
+      "gmv_w": 89.317,
+      "orders": 6373,
+      "score": 3.925,
+      "late_rate": 8.361
+    },
+    {
+      "cat": "housewares",
+      "gmv_w": 77.141,
+      "orders": 5838,
+      "score": 4.076,
+      "late_rate": 6.389
+    },
+    {
+      "cat": "cool_stuff",
+      "gmv_w": 70.285,
+      "orders": 3609,
+      "score": 4.157,
+      "late_rate": 6.654
+    },
+    {
+      "cat": "auto",
+      "gmv_w": 67.696,
+      "orders": 3863,
+      "score": 4.081,
+      "late_rate": 8.176
+    },
+    {
+      "cat": "garden_tools",
+      "gmv_w": 57.827,
+      "orders": 3500,
+      "score": 4.056,
+      "late_rate": 7.865
+    },
+    {
+      "cat": "toys",
+      "gmv_w": 55.298,
+      "orders": 3833,
+      "score": 4.181,
+      "late_rate": 7.366
+    },
+    {
+      "cat": "baby",
+      "gmv_w": 47.68,
+      "orders": 2859,
+      "score": 4.03,
+      "late_rate": 8.641
+    }
+  ],
+  "new_vs_old": [
+    {
+      "mon": "2017-01",
+      "old_pct": 0.0
+    },
+    {
+      "mon": "2017-02",
+      "old_pct": 0.06
+    },
+    {
+      "mon": "2017-03",
+      "old_pct": 0.153
+    },
+    {
+      "mon": "2017-04",
+      "old_pct": 0.605
+    },
+    {
+      "mon": "2017-05",
+      "old_pct": 0.865
+    },
+    {
+      "mon": "2017-06",
+      "old_pct": 1.197
+    },
+    {
+      "mon": "2017-07",
+      "old_pct": 1.298
+    },
+    {
+      "mon": "2017-08",
+      "old_pct": 1.629
+    },
+    {
+      "mon": "2017-09",
+      "old_pct": 1.574
+    },
+    {
+      "mon": "2017-10",
+      "old_pct": 1.772
+    },
+    {
+      "mon": "2017-11",
+      "old_pct": 1.523
+    },
+    {
+      "mon": "2017-12",
+      "old_pct": 2.21
+    },
+    {
+      "mon": "2018-01",
+      "old_pct": 1.894
+    },
+    {
+      "mon": "2018-02",
+      "old_pct": 1.655
+    },
+    {
+      "mon": "2018-03",
+      "old_pct": 1.769
+    },
+    {
+      "mon": "2018-04",
+      "old_pct": 2.214
+    },
+    {
+      "mon": "2018-05",
+      "old_pct": 2.487
+    },
+    {
+      "mon": "2018-06",
+      "old_pct": 2.972
+    },
+    {
+      "mon": "2018-07",
+      "old_pct": 2.363
+    },
+    {
+      "mon": "2018-08",
+      "old_pct": 2.312
+    }
+  ],
+  "seller_tiers": [
+    {
+      "tier": "头部(500单+)",
+      "sellers": 26,
+      "gmv_w": 311.672,
+      "score": 4.033,
+      "late_rate": 7.777
+    },
+    {
+      "tier": "腰部(100-499)",
+      "sellers": 184,
+      "gmv_w": 509.137,
+      "score": 4.062,
+      "late_rate": 7.309
+    },
+    {
+      "tier": "长尾(20-99)",
+      "sellers": 603,
+      "gmv_w": 478.437,
+      "score": 4.103,
+      "late_rate": 7.7
+    },
+    {
+      "tier": "零星(<20)",
+      "sellers": 2216,
+      "gmv_w": 269.594,
+      "score": 4.009,
+      "late_rate": 8.088
+    }
+  ],
+  "promise": [
+    {
+      "bucket": "承诺10天内",
+      "ord": 1,
+      "n": 3945,
+      "actual": 4.715,
+      "buffer": 3.208,
+      "late_rate": 17.313,
+      "score": 4.338
+    },
+    {
+      "bucket": "11-20天",
+      "ord": 2,
+      "n": 26718,
+      "actual": 8.215,
+      "buffer": 8.167,
+      "late_rate": 7.452,
+      "score": 4.238
+    },
+    {
+      "bucket": "21-30天",
+      "ord": 3,
+      "n": 45932,
+      "actual": 13.539,
+      "buffer": 11.499,
+      "late_rate": 8.82,
+      "score": 4.129
+    },
+    {
+      "bucket": "30天以上",
+      "ord": 4,
+      "n": 19608,
+      "actual": 17.358,
+      "buffer": 19.223,
+      "late_rate": 5.595,
+      "score": 4.075
+    }
+  ],
+  "cross_state": [
+    {
+      "t": "跨州配送",
+      "n": 61714,
+      "avg_days": 15.056,
+      "late_rate": 9.269,
+      "score": 4.093
+    },
+    {
+      "t": "同州配送",
+      "n": 34489,
+      "avg_days": 7.861,
+      "late_rate": 6.095,
+      "score": 4.27
+    }
+  ]
+}
