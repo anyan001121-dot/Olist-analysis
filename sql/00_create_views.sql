@@ -25,6 +25,18 @@
 --
 -- 【口径 5】每单只取第一条评论
 --     有 544 个订单存在多条评论（最多 3 条）。不去重会让评分分布被重复计数。
+--     另有 814 个 review_id 在原始表里重复（同一个 review_id 挂在不同
+--     order_id 下）——这是 Olist 复用同一条评价问卷链接产生的已知数据质量
+--     问题，与本口径无关。下方按 order_id 去重不受影响，因为 ROW_NUMBER()
+--     按 order_id 分区，不依赖 review_id 的唯一性。
+--
+-- 【口径 6】布尔字段的 NULL 不能被 CASE WHEN 静默当成 False
+--     is_late / is_bad_review / is_top_review 对未送达（is_late）或无评分
+--     （is_bad_review / is_top_review）订单是 NULL。`AVG(CASE WHEN x THEN 1
+--     ELSE 0 END)` 会把 NULL 落进 ELSE 计为 0，1,702 个未送达订单因此被
+--     当成"按时送达"。本视图层新增 is_late_int / is_bad_int / is_top_int，
+--     用 CAST(... AS INTEGER) 保留 NULL，交给 AVG() 自动跳过；全库聚合一律
+--     改用这三个字段，不再对布尔字段直接写 CASE WHEN。
 -- ============================================================================
 
 -- ---------------------------------------------------------------- ODS 原始表
@@ -149,6 +161,8 @@ SELECT
     DATE_DIFF('day', o.order_delivered_customer_date,
                      o.order_estimated_delivery_date)           AS days_early,
     (o.order_delivered_customer_date > o.order_estimated_delivery_date) AS is_late,
+    CAST((o.order_delivered_customer_date > o.order_estimated_delivery_date) AS INTEGER)
+                                                                 AS is_late_int,
     DATE_DIFF('day', o.order_approved_at,
                      o.order_delivered_carrier_date)            AS seller_handling_days,
     DATE_DIFF('day', o.order_delivered_carrier_date,
@@ -158,15 +172,16 @@ SELECT
     r.review_score,
     (r.review_score <= 2)                                       AS is_bad_review,
     (r.review_score = 5)                                        AS is_top_review,
+    CAST((r.review_score <= 2) AS INTEGER)                      AS is_bad_int,
+    CAST((r.review_score = 5) AS INTEGER)                       AS is_top_int,
     r.has_comment,
 
     -- 客户属性
-    cu.customer_state,
-    cu.customer_city,
-    cu.customer_zip_code_prefix
+    c.customer_state,
+    c.customer_city,
+    c.customer_zip_code_prefix
 FROM ods_orders o
 JOIN ods_customers c   ON o.customer_id = c.customer_id
-JOIN ods_customers cu  ON o.customer_id = cu.customer_id
 LEFT JOIN dwd_order_amount  a ON o.order_id = a.order_id
 LEFT JOIN dwd_order_payment p ON o.order_id = p.order_id
 LEFT JOIN dwd_order_review  r ON o.order_id = r.order_id
@@ -198,6 +213,7 @@ SELECT
     o.customer_unique_id,
     o.customer_state,
     o.is_late,
+    o.is_late_int,
     o.review_score,
     o.delivery_days
 FROM ods_order_items i
@@ -217,7 +233,7 @@ SELECT
     MAX(purchase_date)                                          AS last_order_date,
     DATE_DIFF('day', MIN(purchase_date), MAX(purchase_date))    AS lifespan_days,
     AVG(review_score)                                           AS avg_review_score,
-    SUM(CASE WHEN is_late THEN 1 ELSE 0 END)                    AS late_order_count,
+    SUM(is_late_int)                                            AS late_order_count,
     AVG(delivery_days)                                          AS avg_delivery_days,
     MAX(customer_state)                                         AS customer_state
 FROM dwd_order

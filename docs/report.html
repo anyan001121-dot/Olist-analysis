@@ -219,7 +219,7 @@ footer a{color:var(--accent)}
 
   <header class="hero">
     <p class="eyebrow">Delivery Quality Analysis · Olist Brazil</p>
-    <h1>差评率 13.7%，<br>钱花在哪最有效？</h1>
+    <h1>差评率 13.8%，<br>钱花在哪最有效？</h1>
     <p class="lede">
       基于巴西电商平台 Olist 的<strong>真实公开数据集</strong> ——
       9 张表、9.8 万订单、11.2 万订单明细、<strong>10 万条真实用户评论</strong>。
@@ -288,6 +288,29 @@ footer a{color:var(--accent)}
         这是整个项目的口径地基。
       </p>
     </div>
+
+    <div class="trap">
+      <div class="trap-h"><span class="trap-n">坑 04</span>
+        <span class="trap-t">布尔字段的 NULL 被静默当成 False</span></div>
+      <p>
+        <code style="font-family:var(--mono);font-size:12.5px">is_late</code> 对未送达订单是 NULL，
+        <code style="font-family:var(--mono);font-size:12.5px">is_bad_review</code> 对无评分订单也是 NULL。
+        <code style="font-family:var(--mono);font-size:12.5px">AVG(CASE WHEN is_late THEN 1 ELSE 0 END)</code>
+        会把 NULL 落进 ELSE 计为 0 —— 1,702 个未送达订单因此被当成了"按时送达"。
+      </p>
+      <div class="code">延迟率：CASE 写法 <span class="bad">7.99%</span>   vs   NULL 安全写法 <span class="ok">8.13%</span>
+差评率：CASE 写法 <span class="bad">13.73%</span>  vs   NULL 安全写法 <span class="ok">13.83%</span></div>
+      <p>
+        修法：视图层新增 <code style="font-family:var(--mono);font-size:12.5px">is_late_int</code> /
+        <code style="font-family:var(--mono);font-size:12.5px">is_bad_int</code> /
+        <code style="font-family:var(--mono);font-size:12.5px">is_top_int</code>，
+        不适用时置 NULL，交给 <code style="font-family:var(--mono);font-size:12.5px">AVG()</code> 自动跳过，
+        全库聚合改用新字段。这个修复顺带统一了月度延迟率此前的两套口径（相差最多 0.49pp），
+        也让 PSM 的卖家历史协变量改成不掺未来订单的扩展窗口计算——
+        ATT 从 +45.05pp 修正为 +44.74pp，结论方向不变。完整自查过程见
+        <code style="font-family:var(--mono);font-size:12.5px">python/00_audit.py</code>。
+      </p>
+    </div>
   </section>
 
   <!-- ============ 2 现象 ============ -->
@@ -333,12 +356,12 @@ footer a{color:var(--accent)}
   <section id="s3">
     <div class="sec-head"><span class="sec-num">03</span><h2>因果：这个效应是真的，还是订单难度的错觉？</h2></div>
     <p class="finding">
-      倾向得分匹配估计 ATT <span class="hl">+45.05pp</span>，
-      110 个协变量匹配后标准化均值差全部小于 0.045。
+      倾向得分匹配估计 ATT <span class="hl">+44.74pp</span>，
+      103 个协变量匹配后标准化均值差全部小于 0.045。
     </p>
 
     <p>
-      上面的 44.9pp 差距不能直接汇报，因为<strong>会延迟的订单本来就不是随机的一批</strong> ——
+      上面的 44.8pp 差距不能直接汇报，因为<strong>会延迟的订单本来就不是随机的一批</strong> ——
       它们更可能是跨州的、大件重货的、来自履约能力差的卖家的，而这些特征本身就会拉低评分。
       要回答的是反事实问题：<strong>对于这批实际延迟了的订单，如果它们没有延迟，差评率会是多少？</strong>
     </p>
@@ -347,20 +370,20 @@ footer a{color:var(--accent)}
       <table>
         <thead><tr><th>步骤</th><th>做法</th><th>结果</th></tr></thead>
         <tbody>
-          <tr><td>倾向得分</td><td>逻辑回归，110 维协变量</td><td>AUC 0.781</td></tr>
-          <tr><td>共同支撑域</td><td>剔除无可比对象的样本</td><td>保留 99.89%</td></tr>
-          <tr><td>匹配</td><td>1:1 最近邻，0.2×logit(PS) 标准差卡尺</td><td>成功 99.99%</td></tr>
-          <tr><td>平衡性</td><td>标准化均值差 SMD &lt; 0.1</td><td><span class="pill ok">24 个超标 → 0 个</span></td></tr>
+          <tr><td>倾向得分</td><td>逻辑回归，103 维协变量</td><td>AUC 0.779</td></tr>
+          <tr><td>共同支撑域</td><td>剔除无可比对象的样本</td><td>保留 99.93%</td></tr>
+          <tr><td>匹配</td><td>1:1 最近邻，0.2×logit(PS) 标准差卡尺</td><td>成功 100.00%</td></tr>
+          <tr><td>平衡性</td><td>标准化均值差 SMD &lt; 0.1</td><td><span class="pill ok">23 个超标 → 0 个</span></td></tr>
         </tbody>
       </table>
     </div>
 
     <figure>
       <div class="fig-title">协变量平衡性：匹配前 vs 匹配后</div>
-      <div class="fig-sub">图中为改善最明显的 8 个协变量（共 110 个）· 越靠近右下角说明匹配纠正得越彻底</div>
+      <div class="fig-sub">图中为改善最明显的 8 个协变量（共 103 个）· 越靠近右下角说明匹配纠正得越彻底</div>
       <div class="svg-holder" id="c-bal"></div>
       <figcaption>
-        匹配前有 24 个协变量 SMD 超过 0.1（最大 0.399，是"下单月份=2018-03"），
+        匹配前有 23 个协变量 SMD 超过 0.1（最大 0.403，是"下单月份=2018-03"），
         匹配后全部落到 0.045 以下。这一步是 PSM 的成败所在 ——
         不做平衡性检验的匹配等于没做。
       </figcaption>
@@ -370,17 +393,17 @@ footer a{color:var(--accent)}
       <div class="fig-title">四种估计方法的因果效应</div>
       <div class="fig-sub">ATT = 延迟造成的差评率提升（百分点）</div>
       <div class="hbars" id="c-psm"></div>
-      <figcaption>四种方法极差仅 0.67pp，结论不依赖任何单一方法。</figcaption>
+      <figcaption>四种方法极差仅 0.50pp，结论不依赖任何单一方法。</figcaption>
     </figure>
 
     <div class="callout warn">
       <div class="ct">一个与预期相反的结果</div>
       <p>
         事前假设是"朴素对比会高估延迟的伤害"。但匹配后发现
-        <strong>选择偏差只有 0.13pp（0.3%）</strong> —— 朴素估计本来就近乎无偏。
+        <strong>选择偏差只有 0.04pp（0.1%）</strong> —— 朴素估计本来就近乎无偏。
       </p>
       <p>
-        匹配前确实有 24 个协变量不平衡，两组订单的构成差异是真实存在的；
+        匹配前确实有 23 个协变量不平衡，两组订单的构成差异是真实存在的；
         但这些差异对差评率的影响，相比"延迟"本身小到可以忽略。
       </p>
       <p>
@@ -433,7 +456,7 @@ footer a{color:var(--accent)}
       <div class="fig-sub">3,029 个卖家按订单量分四层</div>
       <div class="hbars" id="c-tiers"></div>
       <figcaption>
-        头部 7.78% / 腰部 7.31% / 长尾 7.70% / 零星 8.09% —— 极差不到 0.8 个百分点。
+        头部 7.88% / 腰部 7.42% / 长尾 7.94% / 零星 8.74% —— 极差不到 1 个百分点。
         卖家规模与履约质量无关，说明问题不在卖家侧。
       </figcaption>
     </figure>
@@ -495,7 +518,7 @@ footer a{color:var(--accent)}
     <div class="sec-head"><span class="sec-num">06</span><h2>预警：下单那一刻能识别出高危订单吗？</h2></div>
     <p class="finding">
       能，但别指望 AUC 好看 —— 差评的主因在下单时还没发生。
-      TOP 10% 的实际差评率 <span class="hl">24.6%</span>，是基线的 2.43 倍。
+      TOP 10% 的实际差评率 <span class="hl">25.0%</span>，是基线的 2.47 倍。
     </p>
 
     <p>
@@ -509,9 +532,9 @@ footer a{color:var(--accent)}
         <thead><tr><th>模型</th><th>特征范围</th><th>AUC</th><th>KS</th><th>用途</th></tr></thead>
         <tbody>
           <tr><td>模型 A</td><td>含 delivery_days、is_late 等履约结果</td>
-              <td>0.732</td><td>0.353</td><td>事后归因</td></tr>
+              <td>0.731</td><td>0.356</td><td>事后归因</td></tr>
           <tr><td>模型 B</td><td>仅下单时可得特征</td>
-              <td>0.636</td><td>0.192</td><td><span class="pill ok">线上预警</span></td></tr>
+              <td>0.637</td><td>0.193</td><td><span class="pill ok">线上预警</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -522,7 +545,7 @@ footer a{color:var(--accent)}
       <div class="cols" id="c-lift"></div>
       <div class="col-axis" id="c-lift-x"></div>
       <figcaption>
-        AUC 0.636 不高，但 TOP 10% 提升 2.43 倍、覆盖 24.3% 的差评。
+        AUC 0.637 不高，但 TOP 10% 提升 2.47 倍、覆盖 24.8% 的差评。
         只要单次干预成本足够低（提前催发货、主动告知物流进度），
         这个区分度就足以支撑投放。硬把 AUC 刷到 0.9 的唯一办法是把履约结果
         塞进特征 —— 那样的模型上线时拿不到这些字段，等于没有。
@@ -541,9 +564,9 @@ footer a{color:var(--accent)}
         它的"卖家历史"里混进了 7、8 月才发生的订单。模型看到了未来。
       </p>
       <p>改成<strong>扩展窗口</strong>（每单只能看到该卖家在它之前的订单）后：</p>
-      <div class="code">模型 B 的 AUC          <span class="bad">0.932</span>  →  <span class="ok">0.636</span>
+      <div class="code">模型 B 的 AUC          <span class="bad">0.932</span>  →  <span class="ok">0.637</span>
 卖家历史的解释力       <span class="bad">60.7%</span>  →  <span class="ok">7.2%</span>
-履约表现的解释力       <span class="bad">22.9%</span>  →  <span class="ok">67.6%</span></div>
+履约表现的解释力       <span class="bad">22.9%</span>  →  <span class="ok">67.4%</span></div>
       <p>
         <strong>归因结论完全反转。</strong>不查这个 bug，会得出"差评主要由卖家历史质量决定"
         的错误结论，进而建议去治理卖家 —— 而正确结论是履约过程才是主因。
@@ -583,7 +606,7 @@ footer a{color:var(--accent)}
 
     <h3>3 · 用预警模型做主动干预</h3>
     <p>
-      对下单时预警分数 TOP 10% 的订单（差评率 24.6%，2.43 倍基线）做
+      对下单时预警分数 TOP 10% 的订单（差评率 25.0%，2.47 倍基线）做
       提前催发货、主动告知物流进度。具体触达比例取决于单次干预成本
       与一条差评的代价 —— 这是业务方的决策，不是模型能替他们做的。
     </p>
@@ -594,11 +617,11 @@ footer a{color:var(--accent)}
         <thead><tr><th>情形</th><th>延迟率目标</th><th>可消除差评</th><th>占差评总量</th></tr></thead>
         <tbody>
           <tr><td>A · 对齐 SP 州现有水平</td><td>8.0% → 5.0%</td>
-              <td>约 1,255 条</td><td>10.5%</td></tr>
+              <td>约 1,183 条</td><td>10.9%</td></tr>
           <tr><td>B · 治理最差的线路与卖家</td><td>8.0% → 6.5%</td>
-              <td>约 625 条</td><td>5.2%</td></tr>
+              <td>约 616 条</td><td>5.7%</td></tr>
           <tr style="color:var(--ink-3)"><td>理论上界（不可达成）</td><td>8.0% → 0%</td>
-              <td>3,352 条</td><td>28.1%</td></tr>
+              <td>3,072 条</td><td>28.3%</td></tr>
         </tbody>
       </table>
     </div>
@@ -620,7 +643,7 @@ footer a{color:var(--accent)}
 <div id="tip" role="status" aria-live="polite"></div>
 
 <script>
-const D = {"ov":{"orders":97905.0,"customers":94703.0,"gmv_m":15.688,"aov":160.241,"score":4.118,"late_rate":7.989,"bad_rate":13.725,"del_days":12.477},"sellers":3029,"items":111752,"rep":{"wrong_key":0.0,"surface":3.035,"real_rate":2.168},"dose":[{"bucket":"提前15天+","ord":1,"n":34526,"score":4.325,"bad":9.013},{"bucket":"提前8-14天","ord":2,"n":36147,"score":4.312,"bad":8.878},{"bucket":"提前3-7天","ord":3,"n":14240,"score":4.215,"bad":9.965},{"bucket":"提前0-2天","ord":4,"n":4269,"score":4.109,"bad":11.712},{"bucket":"延迟1-3天","ord":5,"n":1851,"score":3.291,"bad":32.199},{"bucket":"延迟4-7天","ord":6,"n":1748,"score":2.106,"bad":67.563},{"bucket":"延迟8-15天","ord":7,"n":1601,"score":1.676,"bad":79.95},{"bucket":"延迟15天+","ord":8,"n":1178,"score":1.732,"bad":78.183}],"late":[{"is_late":0,"n":87902,"score":4.295,"bad":9.194,"top5":62.471,"avg_days":10.79},{"is_late":1,"n":7658,"score":2.568,"bad":54.009,"top5":22.277,"avg_days":31.326}],"attr":{"seller_excess":3.18,"carrier_excess":18.67,"seller_pct":14.54,"carrier_pct":85.46},"legs":[{"grp":"延迟送达","approve":0.513,"handling":5.176,"transit":25.67,"total_days":31.459},{"grp":"按时/提前","approve":0.419,"handling":2.451,"transit":7.843,"total_days":10.796}],"psm":[{"方法":"朴素对比（有偏）","ATT_pp":44.92},{"方法":"倾向得分匹配 PSM","ATT_pp":45.05},{"方法":"逆概率加权 IPW","ATT_pp":44.85},{"方法":"回归调整","ATT_pp":44.38}],"bal":{"n_cov":110,"before_gt01":24,"after_gt01":0,"max_before":0.3987,"max_after":0.0449},"balTop":[{"协变量":"purchase_month_2018-03-01","匹配前SMD":0.3987,"匹配后SMD":0.0316,"改善":0.367},{"协变量":"seller_late_rate_loo","匹配前SMD":0.3566,"匹配后SMD":0.0124,"改善":0.3442},{"协变量":"purchase_month_2018-06-01","匹配前SMD":0.2951,"匹配后SMD":0.0066,"改善":0.2884},{"协变量":"customer_state_SP","匹配前SMD":0.2665,"匹配后SMD":0.0076,"改善":0.2588},{"协变量":"purchase_month_2018-02-01","匹配前SMD":0.2477,"匹配后SMD":0.0023,"改善":0.2453},{"协变量":"customer_state_RJ","匹配前SMD":0.2504,"匹配后SMD":0.0059,"改善":0.2445},{"协变量":"cross_state","匹配前SMD":0.2143,"匹配后SMD":0.0006,"改善":0.2137},{"协变量":"promised_days","匹配前SMD":0.2178,"匹配后SMD":0.0095,"改善":0.2083}],"warn":[{"模型":"A_含履约结果","AUC":0.732,"KS":0.3528,"PR_AUC":0.3447},{"模型":"B_仅下单时特征","AUC":0.636,"KS":0.1922,"PR_AUC":0.196}],"lift":[{"d":"D1","l":2.43,"r":24.57,"c":24.33},{"d":"D2","l":1.19,"r":12.03,"c":36.24},{"d":"D3","l":1.08,"r":10.94,"c":47.07},{"d":"D4","l":0.94,"r":9.52,"c":56.49},{"d":"D5","l":0.99,"r":9.99,"c":66.39},{"d":"D6","l":0.79,"r":8.01,"c":74.31},{"d":"D7","l":0.76,"r":7.67,"c":81.9},{"d":"D8","l":0.66,"r":6.68,"c":88.51},{"d":"D9","l":0.57,"r":5.78,"c":94.23},{"d":"D10","l":0.58,"r":5.82,"c":100.0}],"grp":[{"归类":"履约表现","占比_pct":67.56},{"归类":"订单与支付","占比_pct":16.67},{"归类":"卖家历史","占比_pct":7.17},{"归类":"商品属性","占比_pct":6.26},{"归类":"地理距离","占比_pct":2.32}],"promise":[{"bucket":"承诺10天内","ord":1,"n":3945,"actual":4.715,"buffer":3.208,"late_rate":17.313,"score":4.338},{"bucket":"11-20天","ord":2,"n":26718,"actual":8.215,"buffer":8.167,"late_rate":7.452,"score":4.238},{"bucket":"21-30天","ord":3,"n":45932,"actual":13.539,"buffer":11.499,"late_rate":8.82,"score":4.129},{"bucket":"30天以上","ord":4,"n":19608,"actual":17.358,"buffer":19.223,"late_rate":5.595,"score":4.075}],"cross":[{"t":"跨州配送","n":61714,"avg_days":15.056,"late_rate":9.269,"score":4.093},{"t":"同州配送","n":34489,"avg_days":7.861,"late_rate":6.095,"score":4.27}],"tiers":[{"tier":"头部(500单+)","sellers":26,"gmv_w":311.672,"score":4.033,"late_rate":7.777},{"tier":"腰部(100-499)","sellers":184,"gmv_w":509.137,"score":4.062,"late_rate":7.309},{"tier":"长尾(20-99)","sellers":603,"gmv_w":478.437,"score":4.103,"late_rate":7.7},{"tier":"零星(<20)","sellers":2216,"gmv_w":269.594,"score":4.009,"late_rate":8.088}],"states":[{"st":"AL","n":396,"avg_days":24.48,"late_rate":23.99,"score":3.858,"gmv_w":9.427},{"st":"PA","n":942,"avg_days":23.709,"late_rate":12.42,"score":3.904,"gmv_w":21.074},{"st":"MA","n":713,"avg_days":21.474,"late_rate":19.635,"score":3.831,"gmv_w":14.68},{"st":"SE","n":332,"avg_days":21.38,"late_rate":15.361,"score":3.9,"gmv_w":6.994},{"st":"CE","n":1273,"avg_days":21.171,"late_rate":15.397,"score":3.935,"gmv_w":26.471},{"st":"PB","n":516,"avg_days":20.357,"late_rate":11.047,"score":4.074,"gmv_w":13.776},{"st":"PI","n":475,"avg_days":19.379,"late_rate":16.0,"score":3.994,"gmv_w":10.493},{"st":"BA","n":3253,"avg_days":19.277,"late_rate":14.049,"score":3.93,"gmv_w":59.082},{"st":"DF","n":2074,"avg_days":12.87,"late_rate":7.088,"score":4.139,"gmv_w":34.523},{"st":"MG","n":11319,"avg_days":11.92,"late_rate":5.628,"score":4.194,"gmv_w":181.442},{"st":"PR","n":4903,"avg_days":11.919,"late_rate":5.017,"score":4.24,"gmv_w":77.936},{"st":"SP","n":40399,"avg_days":8.677,"late_rate":5.901,"score":4.248,"gmv_w":575.683}],"monthly":[{"mon":"2017-01","orders":787,"gmv_w":13.694,"score":4.094,"late_rate":2.922,"del_days":12.753,"transit":9.172,"handling":3.008},{"mon":"2017-02","orders":1718,"gmv_w":28.356,"score":4.101,"late_rate":3.085,"del_days":13.3,"transit":9.515,"handling":3.335},{"mon":"2017-03","orders":2617,"gmv_w":42.562,"score":4.133,"late_rate":5.426,"del_days":13.044,"transit":9.795,"handling":2.961},{"mon":"2017-04","orders":2377,"gmv_w":40.585,"score":4.069,"late_rate":7.615,"del_days":15.023,"transit":11.222,"handling":3.186},{"mon":"2017-05","orders":3640,"gmv_w":58.271,"score":4.181,"late_rate":3.516,"del_days":11.427,"transit":8.319,"handling":2.6},{"mon":"2017-06","orders":3205,"gmv_w":49.965,"score":4.178,"late_rate":3.775,"del_days":12.013,"transit":8.823,"handling":2.709},{"mon":"2017-07","orders":3946,"gmv_w":57.875,"score":4.228,"late_rate":3.371,"del_days":11.489,"transit":8.449,"handling":2.538},{"mon":"2017-08","orders":4272,"gmv_w":66.199,"score":4.266,"late_rate":3.254,"del_days":11.016,"transit":8.05,"handling":2.488},{"mon":"2017-09","orders":4227,"gmv_w":71.71,"score":4.221,"late_rate":5.11,"del_days":11.723,"transit":8.639,"handling":2.529},{"mon":"2017-10","orders":4547,"gmv_w":76.486,"score":4.176,"late_rate":5.212,"del_days":11.733,"transit":8.41,"handling":2.832},{"mon":"2017-11","orders":7421,"gmv_w":117.339,"score":3.951,"late_rate":14.055,"del_days":15.073,"transit":11.114,"handling":3.415},{"mon":"2017-12","orders":5618,"gmv_w":86.23,"score":4.043,"late_rate":8.224,"del_days":15.306,"transit":11.7,"handling":3.071},{"mon":"2018-01","orders":7187,"gmv_w":110.248,"score":4.069,"late_rate":6.456,"del_days":14.006,"transit":10.483,"handling":3.008},{"mon":"2018-02","orders":6624,"gmv_w":98.015,"score":3.861,"late_rate":15.821,"del_days":16.873,"transit":13.381,"handling":3.012},{"mon":"2018-03","orders":7168,"gmv_w":115.279,"score":3.765,"late_rate":20.871,"del_days":16.238,"transit":12.973,"handling":2.822},{"mon":"2018-04","orders":6919,"gmv_w":115.663,"score":4.17,"late_rate":5.218,"del_days":11.419,"transit":8.622,"handling":2.117},{"mon":"2018-05","orders":6833,"gmv_w":114.616,"score":4.21,"late_rate":8.137,"del_days":11.336,"transit":8.571,"handling":2.304},{"mon":"2018-06","orders":6145,"gmv_w":102.061,"score":4.288,"late_rate":1.351,"del_days":9.165,"transit":6.524,"handling":2.206},{"mon":"2018-07","orders":6233,"gmv_w":103.982,"score":4.29,"late_rate":4.428,"del_days":8.888,"transit":5.982,"handling":2.281},{"mon":"2018-08","orders":6421,"gmv_w":99.704,"score":4.288,"late_rate":10.279,"del_days":7.658,"transit":5.073,"handling":2.154}]};
+const D = {"ov":{"orders":97905.0,"customers":94703.0,"gmv_m":15.688,"aov":160.241,"score":4.118,"late_rate":8.131,"bad_rate":13.827,"del_days":12.477},"sellers":3029,"items":111752,"rep":{"wrong_key":0.0,"surface":3.035,"real_rate":2.168},"dose":[{"bucket":"提前15天+","ord":1,"n":34526,"score":4.325,"bad":9.013},{"bucket":"提前8-14天","ord":2,"n":36147,"score":4.312,"bad":8.878},{"bucket":"提前3-7天","ord":3,"n":14240,"score":4.215,"bad":9.965},{"bucket":"提前0-2天","ord":4,"n":4269,"score":4.109,"bad":11.712},{"bucket":"延迟1-3天","ord":5,"n":1851,"score":3.291,"bad":32.199},{"bucket":"延迟4-7天","ord":6,"n":1748,"score":2.106,"bad":67.563},{"bucket":"延迟8-15天","ord":7,"n":1601,"score":1.676,"bad":79.95},{"bucket":"延迟15天+","ord":8,"n":1178,"score":1.732,"bad":78.183}],"late":[{"is_late":0,"n":87902,"score":4.295,"bad":9.194,"top5":62.471,"avg_days":10.79},{"is_late":1,"n":7658,"score":2.568,"bad":54.009,"top5":22.277,"avg_days":31.326}],"attr":{"seller_excess":3.18,"carrier_excess":18.67,"seller_pct":14.54,"carrier_pct":85.46},"legs":[{"grp":"延迟送达","approve":0.513,"handling":5.176,"transit":25.67,"total_days":31.459},{"grp":"按时/提前","approve":0.419,"handling":2.451,"transit":7.843,"total_days":10.796}],"psm":[{"方法":"朴素对比（有偏）","ATT_pp":44.77},{"方法":"倾向得分匹配 PSM","ATT_pp":44.74},{"方法":"逆概率加权 IPW","ATT_pp":44.72},{"方法":"回归调整","ATT_pp":44.27}],"bal":{"n_cov":103,"before_gt01":23,"after_gt01":0,"max_before":0.4025,"max_after":0.0446},"balTop":[{"协变量":"purchase_month_2018-03-01","匹配前SMD":0.4025,"匹配后SMD":0.0231,"改善":0.3793},{"协变量":"seller_late_rate_loo","匹配前SMD":0.3464,"匹配后SMD":0.0006,"改善":0.3457},{"协变量":"purchase_month_2018-06-01","匹配前SMD":0.297,"匹配后SMD":0.0146,"改善":0.2824},{"协变量":"customer_state_SP","匹配前SMD":0.2708,"匹配后SMD":0.0025,"改善":0.2683},{"协变量":"customer_state_RJ","匹配前SMD":0.2531,"匹配后SMD":0.0193,"改善":0.2338},{"协变量":"purchase_month_2018-02-01","匹配前SMD":0.2471,"匹配后SMD":0.022,"改善":0.2251},{"协变量":"promised_days","匹配前SMD":0.2133,"匹配后SMD":0.0065,"改善":0.2068},{"协变量":"cross_state","匹配前SMD":0.22,"匹配后SMD":0.0173,"改善":0.2026}],"warn":[{"模型":"A_含履约结果","AUC":0.7307,"KS":0.3556,"PR_AUC":0.3462},{"模型":"B_仅下单时特征","AUC":0.6373,"KS":0.1927,"PR_AUC":0.195}],"lift":[{"d":"D1","l":2.47,"r":25.0,"c":24.75},{"d":"D2","l":1.14,"r":11.51,"c":36.15},{"d":"D3","l":1.09,"r":11.04,"c":47.07},{"d":"D4","l":0.95,"r":9.57,"c":56.54},{"d":"D5","l":0.95,"r":9.56,"c":66.01},{"d":"D6","l":0.87,"r":8.76,"c":74.68},{"d":"D7","l":0.73,"r":7.39,"c":82.0},{"d":"D8","l":0.67,"r":6.73,"c":88.65},{"d":"D9","l":0.58,"r":5.83,"c":94.42},{"d":"D10","l":0.56,"r":5.63,"c":100.0}],"grp":[{"归类":"履约表现","占比_pct":67.44},{"归类":"订单与支付","占比_pct":16.6},{"归类":"卖家历史","占比_pct":7.21},{"归类":"商品属性","占比_pct":6.43},{"归类":"地理距离","占比_pct":2.32}],"promise":[{"bucket":"承诺10天内","ord":1,"n":3945,"actual":4.715,"buffer":3.208,"late_rate":17.313,"score":4.338},{"bucket":"11-20天","ord":2,"n":26718,"actual":8.215,"buffer":8.167,"late_rate":7.452,"score":4.238},{"bucket":"21-30天","ord":3,"n":45932,"actual":13.539,"buffer":11.499,"late_rate":8.82,"score":4.129},{"bucket":"30天以上","ord":4,"n":19608,"actual":17.358,"buffer":19.223,"late_rate":5.595,"score":4.075}],"cross":[{"t":"跨州配送","n":61714,"avg_days":15.056,"late_rate":9.269,"score":4.093},{"t":"同州配送","n":34489,"avg_days":7.861,"late_rate":6.095,"score":4.27}],"tiers":[{"tier":"头部(500单+)","sellers":26,"gmv_w":311.672,"score":4.033,"late_rate":7.878},{"tier":"腰部(100-499)","sellers":184,"gmv_w":509.137,"score":4.062,"late_rate":7.422},{"tier":"长尾(20-99)","sellers":603,"gmv_w":478.437,"score":4.103,"late_rate":7.936},{"tier":"零星(<20)","sellers":2216,"gmv_w":269.594,"score":4.009,"late_rate":8.738}],"states":[{"st":"AL","n":396,"avg_days":24.48,"late_rate":23.99,"score":3.858,"gmv_w":9.427},{"st":"PA","n":942,"avg_days":23.709,"late_rate":12.42,"score":3.904,"gmv_w":21.074},{"st":"MA","n":713,"avg_days":21.474,"late_rate":19.635,"score":3.831,"gmv_w":14.68},{"st":"SE","n":332,"avg_days":21.38,"late_rate":15.361,"score":3.9,"gmv_w":6.994},{"st":"CE","n":1273,"avg_days":21.171,"late_rate":15.397,"score":3.935,"gmv_w":26.471},{"st":"PB","n":516,"avg_days":20.357,"late_rate":11.047,"score":4.074,"gmv_w":13.776},{"st":"PI","n":475,"avg_days":19.379,"late_rate":16.0,"score":3.994,"gmv_w":10.493},{"st":"BA","n":3253,"avg_days":19.277,"late_rate":14.049,"score":3.93,"gmv_w":59.082},{"st":"DF","n":2074,"avg_days":12.87,"late_rate":7.088,"score":4.139,"gmv_w":34.523},{"st":"MG","n":11319,"avg_days":11.92,"late_rate":5.628,"score":4.194,"gmv_w":181.442},{"st":"PR","n":4903,"avg_days":11.919,"late_rate":5.017,"score":4.24,"gmv_w":77.936},{"st":"SP","n":40399,"avg_days":8.677,"late_rate":5.901,"score":4.248,"gmv_w":575.683}],"monthly":[{"mon":"2017-01","orders":787,"gmv_w":13.694,"score":4.094,"late_rate":2.922,"del_days":12.753,"transit":9.172,"handling":3.008},{"mon":"2017-02","orders":1718,"gmv_w":28.356,"score":4.101,"late_rate":3.085,"del_days":13.3,"transit":9.515,"handling":3.335},{"mon":"2017-03","orders":2617,"gmv_w":42.562,"score":4.133,"late_rate":5.426,"del_days":13.044,"transit":9.795,"handling":2.961},{"mon":"2017-04","orders":2377,"gmv_w":40.585,"score":4.069,"late_rate":7.615,"del_days":15.023,"transit":11.222,"handling":3.186},{"mon":"2017-05","orders":3640,"gmv_w":58.271,"score":4.181,"late_rate":3.516,"del_days":11.427,"transit":8.319,"handling":2.6},{"mon":"2017-06","orders":3205,"gmv_w":49.965,"score":4.178,"late_rate":3.775,"del_days":12.013,"transit":8.823,"handling":2.709},{"mon":"2017-07","orders":3946,"gmv_w":57.875,"score":4.228,"late_rate":3.371,"del_days":11.489,"transit":8.449,"handling":2.538},{"mon":"2017-08","orders":4272,"gmv_w":66.199,"score":4.266,"late_rate":3.254,"del_days":11.016,"transit":8.05,"handling":2.488},{"mon":"2017-09","orders":4227,"gmv_w":71.71,"score":4.221,"late_rate":5.11,"del_days":11.723,"transit":8.639,"handling":2.529},{"mon":"2017-10","orders":4547,"gmv_w":76.486,"score":4.176,"late_rate":5.212,"del_days":11.733,"transit":8.41,"handling":2.832},{"mon":"2017-11","orders":7421,"gmv_w":117.339,"score":3.951,"late_rate":14.055,"del_days":15.073,"transit":11.114,"handling":3.415},{"mon":"2017-12","orders":5618,"gmv_w":86.23,"score":4.043,"late_rate":8.224,"del_days":15.306,"transit":11.7,"handling":3.071},{"mon":"2018-01","orders":7187,"gmv_w":110.248,"score":4.069,"late_rate":6.456,"del_days":14.006,"transit":10.483,"handling":3.008},{"mon":"2018-02","orders":6624,"gmv_w":98.015,"score":3.861,"late_rate":15.821,"del_days":16.873,"transit":13.381,"handling":3.012},{"mon":"2018-03","orders":7168,"gmv_w":115.279,"score":3.765,"late_rate":20.871,"del_days":16.238,"transit":12.973,"handling":2.822},{"mon":"2018-04","orders":6919,"gmv_w":115.663,"score":4.17,"late_rate":5.218,"del_days":11.419,"transit":8.622,"handling":2.117},{"mon":"2018-05","orders":6833,"gmv_w":114.616,"score":4.21,"late_rate":8.137,"del_days":11.336,"transit":8.571,"handling":2.304},{"mon":"2018-06","orders":6145,"gmv_w":102.061,"score":4.288,"late_rate":1.351,"del_days":9.165,"transit":6.524,"handling":2.206},{"mon":"2018-07","orders":6233,"gmv_w":103.982,"score":4.29,"late_rate":4.428,"del_days":8.888,"transit":5.982,"handling":2.281},{"mon":"2018-08","orders":6421,"gmv_w":99.704,"score":4.288,"late_rate":10.279,"del_days":7.658,"transit":5.073,"handling":2.154}]};
 
 const $ = s => document.querySelector(s);
 const el = (t, c, h) => { const n = document.createElement(t);

@@ -16,8 +16,8 @@ SELECT
     COUNT(*)                                                        AS 订单数,
     ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2)              AS 占比_pct,
     ROUND(AVG(review_score), 3)                                     AS 平均评分,
-    ROUND(AVG(CASE WHEN is_bad_review THEN 1.0 ELSE 0 END) * 100, 2) AS 差评率_pct,
-    ROUND(AVG(CASE WHEN is_top_review THEN 1.0 ELSE 0 END) * 100, 2) AS 五星率_pct,
+    ROUND(AVG(is_bad_int) * 100, 2) AS 差评率_pct,
+    ROUND(AVG(is_top_int) * 100, 2) AS 五星率_pct,
     ROUND(AVG(delivery_days), 1)                                    AS 平均送达天数,
     ROUND(AVG(order_amount), 1)                                     AS 客单价
 FROM dwd_order
@@ -38,10 +38,10 @@ SELECT
          ELSE '8_延迟15天以上' END                                  AS 时效区间,
     COUNT(*)                                                        AS 订单数,
     ROUND(AVG(review_score), 3)                                     AS 平均评分,
-    ROUND(AVG(CASE WHEN is_bad_review THEN 1.0 ELSE 0 END) * 100, 2) AS 差评率_pct,
+    ROUND(AVG(is_bad_int) * 100, 2) AS 差评率_pct,
     -- 相对上一档的差评率变化，看在哪一档发生断崖
-    ROUND(AVG(CASE WHEN is_bad_review THEN 1.0 ELSE 0 END) * 100
-        - LAG(AVG(CASE WHEN is_bad_review THEN 1.0 ELSE 0 END) * 100)
+    ROUND(AVG(is_bad_int) * 100
+        - LAG(AVG(is_bad_int) * 100)
           OVER (ORDER BY MIN(CASE WHEN days_early >= 15 THEN 1
                                   WHEN days_early >= 8 THEN 2
                                   WHEN days_early >= 3 THEN 3
@@ -109,12 +109,12 @@ FROM late_orders;
 SELECT
     STRFTIME(purchase_month, '%Y-%m')                               AS 月份,
     COUNT(*)                                                        AS 订单数,
-    ROUND(AVG(CASE WHEN is_late THEN 1.0 ELSE 0 END) * 100, 2)      AS 延迟率_pct,
-    ROUND(AVG(CASE WHEN is_late THEN 1.0 ELSE 0 END) * 100
-        - LAG(AVG(CASE WHEN is_late THEN 1.0 ELSE 0 END) * 100)
+    ROUND(AVG(is_late_int) * 100, 2)      AS 延迟率_pct,
+    ROUND(AVG(is_late_int) * 100
+        - LAG(AVG(is_late_int) * 100)
           OVER (ORDER BY purchase_month), 2)                        AS 延迟率环比_pct_point,
     ROUND(AVG(review_score), 3)                                     AS 平均评分,
-    ROUND(AVG(CASE WHEN is_bad_review THEN 1.0 ELSE 0 END) * 100, 2) AS 差评率_pct,
+    ROUND(AVG(is_bad_int) * 100, 2) AS 差评率_pct,
     ROUND(AVG(delivery_days), 1)                                    AS 平均送达天数,
     ROUND(AVG(seller_handling_days), 2)                             AS 卖家备货_天,
     ROUND(AVG(carrier_transit_days), 2)                             AS 运输_天
@@ -132,7 +132,7 @@ SELECT
     ROUND(AVG(delivery_days), 1)                                    AS 平均送达天数,
     ROUND(AVG(promised_days), 1)                                    AS 平均承诺天数,
     ROUND(AVG(days_early), 1)                                       AS 平均提前天数,
-    ROUND(AVG(CASE WHEN is_late THEN 1.0 ELSE 0 END) * 100, 2)      AS 延迟率_pct,
+    ROUND(AVG(is_late_int) * 100, 2)      AS 延迟率_pct,
     ROUND(AVG(review_score), 3)                                     AS 平均评分,
     ROUND(AVG(freight_ratio) * 100, 1)                              AS 运费占比_pct,
     ROUND(AVG(order_amount), 1)                                     AS 客单价
@@ -157,7 +157,7 @@ SELECT
     COUNT(*)                                                        AS 订单数,
     ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2)              AS 占比_pct,
     ROUND(AVG(o.delivery_days), 1)                                  AS 平均送达天数,
-    ROUND(AVG(CASE WHEN o.is_late THEN 1.0 ELSE 0 END) * 100, 2)    AS 延迟率_pct,
+    ROUND(AVG(o.is_late_int) * 100, 2)    AS 延迟率_pct,
     ROUND(AVG(o.review_score), 3)                                   AS 平均评分,
     ROUND(AVG(o.freight_ratio) * 100, 1)                            AS 运费占比_pct
 FROM dwd_order o
@@ -178,7 +178,7 @@ SELECT
     ROUND(AVG(promised_days), 1)                                    AS 平均承诺天数,
     ROUND(AVG(delivery_days), 1)                                    AS 平均实际天数,
     ROUND(AVG(days_early), 1)                                       AS 平均富余天数,
-    ROUND(AVG(CASE WHEN is_late THEN 1.0 ELSE 0 END) * 100, 2)      AS 延迟率_pct,
+    ROUND(AVG(is_late_int) * 100, 2)      AS 延迟率_pct,
     ROUND(AVG(review_score), 3)                                     AS 平均评分
 FROM dwd_order
 WHERE delivered_ts IS NOT NULL AND promised_days IS NOT NULL

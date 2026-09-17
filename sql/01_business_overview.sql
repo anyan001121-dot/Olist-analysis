@@ -14,8 +14,8 @@ SELECT
     ROUND(AVG(item_count), 3)                                       AS 平均件数,
     ROUND(AVG(review_score), 3)                                     AS 平均评分,
     ROUND(AVG(delivery_days), 2)                                    AS 平均送达天数,
-    ROUND(AVG(CASE WHEN is_late THEN 1.0 ELSE 0 END) * 100, 2)      AS 延迟送达率_pct,
-    ROUND(AVG(CASE WHEN is_bad_review THEN 1.0 ELSE 0 END) * 100, 2) AS 差评率_pct
+    ROUND(AVG(is_late_int) * 100, 2)      AS 延迟送达率_pct,
+    ROUND(AVG(is_bad_int) * 100, 2) AS 差评率_pct
 FROM dwd_order;
 
 
@@ -32,7 +32,7 @@ SELECT
     ROUND(AVG(SUM(order_amount)) OVER (ORDER BY purchase_month
           ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) / 1e4, 1)       AS GMV_3月均值_万,
     ROUND(AVG(review_score), 3)                                     AS 平均评分,
-    ROUND(AVG(CASE WHEN is_late THEN 1.0 ELSE 0 END) * 100, 2)      AS 延迟率_pct
+    ROUND(AVG(is_late_int) * 100, 2)      AS 延迟率_pct
 FROM dwd_order
 GROUP BY purchase_month
 ORDER BY purchase_month;
@@ -117,7 +117,7 @@ SELECT
     ROUND(AVG(order_amount), 1)                                     AS 客单价,
     ROUND(AVG(freight_ratio) * 100, 2)                              AS 运费占比_pct,
     ROUND(AVG(delivery_days), 1)                                    AS 平均送达天数,
-    ROUND(AVG(CASE WHEN is_late THEN 1.0 ELSE 0 END) * 100, 2)      AS 延迟率_pct,
+    ROUND(AVG(is_late_int) * 100, 2)      AS 延迟率_pct,
     ROUND(AVG(review_score), 3)                                     AS 平均评分
 FROM dwd_order
 GROUP BY customer_state

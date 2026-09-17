@@ -59,66 +59,59 @@ con = duckdb.connect(":memory:")
 con.execute(open("sql/00_create_views.sql", encoding="utf-8").read())
 
 SQL = """
-WITH order_level AS (
-    SELECT
-        o.order_id,
-        o.customer_unique_id,
-        o.purchase_month,
-        o.is_late::INT                                      AS treat,
-        o.is_bad_review::INT                                AS bad_review,
-        o.review_score,
-        o.order_amount,
-        o.freight_amount,
-        o.item_count,
-        o.distinct_sellers,
-        o.promised_days,
-        o.max_installments,
-        o.main_payment_type,
-        o.customer_state,
-        -- 商品物理属性（取订单内最大件，履约难度由最难的那件决定）
-        MAX(i.product_weight_g)                             AS max_weight_g,
-        MAX(i.product_volume_cm3)                           AS max_volume,
-        MAX(i.seller_state)                                 AS seller_state,
-        ARG_MAX(i.category_en, i.item_amount)               AS main_category,
-        MAX(CASE WHEN i.seller_state = o.customer_state THEN 0 ELSE 1 END) AS cross_state,
-        ARG_MAX(i.seller_id, i.item_amount)                 AS main_seller
-    FROM dwd_order o
-    JOIN dwd_order_item i ON o.order_id = i.order_id
-    WHERE o.delivered_ts IS NOT NULL
-      AND o.review_score IS NOT NULL
-      AND o.promised_days IS NOT NULL
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14
-),
--- 卖家历史延迟率：留一法（leave-one-out），避免把当前订单自己的结果算进特征，
--- 否则就是标签泄漏——这个细节在因果推断里尤其致命
-seller_stats AS (
-    SELECT
-        main_seller,
-        COUNT(*)      AS seller_orders,
-        SUM(treat)    AS seller_late_sum
-    FROM order_level
-    GROUP BY main_seller
-)
 SELECT
-    ol.*,
-    ss.seller_orders,
-    CASE WHEN ss.seller_orders > 1
-         THEN (ss.seller_late_sum - ol.treat) * 1.0 / (ss.seller_orders - 1)
-         ELSE NULL END                                      AS seller_late_rate_loo
-FROM order_level ol
-JOIN seller_stats ss ON ol.main_seller = ss.main_seller
-WHERE ss.seller_orders >= 5
+    o.order_id,
+    o.customer_unique_id,
+    o.purchase_month,
+    o.purchase_ts,
+    o.is_late::INT                                      AS treat,
+    o.is_bad_review::INT                                AS bad_review,
+    o.review_score,
+    o.order_amount,
+    o.freight_amount,
+    o.item_count,
+    o.distinct_sellers,
+    o.promised_days,
+    o.max_installments,
+    o.main_payment_type,
+    o.customer_state,
+    -- 商品物理属性（取订单内最大件，履约难度由最难的那件决定）
+    MAX(i.product_weight_g)                             AS max_weight_g,
+    MAX(i.product_volume_cm3)                           AS max_volume,
+    MAX(i.seller_state)                                 AS seller_state,
+    ARG_MAX(i.category_en, i.item_amount)               AS main_category,
+    MAX(CASE WHEN i.seller_state = o.customer_state THEN 0 ELSE 1 END) AS cross_state,
+    ARG_MAX(i.seller_id, i.item_amount)                 AS main_seller
+FROM dwd_order o
+JOIN dwd_order_item i ON o.order_id = i.order_id
+WHERE o.delivered_ts IS NOT NULL
+  AND o.review_score IS NOT NULL
+  AND o.promised_days IS NOT NULL
+GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
 """
 
 df = con.execute(SQL).fetchdf()
 con.close()
 
+# ---------------------------------------------------------------- 卖家历史延迟率
+# ⚠ 与 02_review_driver.py 同一类问题：第一版用留一法（全期均值剔除当前订单自己）
+# 算 seller_late_rate_loo，对早期订单来说，这个协变量混进了未来才发生的订单——
+# PSM 只用它做倾向得分匹配、不做线上预测，偏误远小于预测模型，但仍然违反
+# "协变量须为处理前变量"的假定。正确做法与 02_review_driver.py 一致：扩展窗口，
+# 每个订单只能看到该卖家在它之前完成的订单。
+df = df.sort_values(["main_seller", "purchase_ts"]).reset_index(drop=True)
+g = df.groupby("main_seller", sort=False)
+df["seller_orders"] = g.cumcount()                          # 此前已有多少单
+df["seller_late_rate_loo"] = g["treat"].apply(lambda s: s.expanding().mean().shift(1)).values
+
+df = df[df["seller_orders"] >= 5]                           # 至少 5 单历史才有参考价值
 df = df.dropna(subset=["seller_late_rate_loo", "max_weight_g", "promised_days"])
+df = df.sort_values("purchase_ts").reset_index(drop=True)
 print(f"样本量        : {len(df):,} 单")
 print(f"处理组(延迟)  : {df['treat'].sum():,} 单 ({df['treat'].mean():.2%})")
 print(f"对照组(按时)  : {(1-df['treat']).sum():,.0f} 单")
-print("说明：仅保留已送达、有评分、且主卖家历史订单 ≥5 单的订单，")
-print("      以保证卖家历史延迟率这一协变量有意义。")
+print("说明：仅保留已送达、有评分、且主卖家此前已有 ≥5 单历史订单的订单，")
+print("      seller_late_rate_loo 改为扩展窗口计算，不再包含未来订单。")
 
 
 # ============================================================ 2. 朴素对比
@@ -381,9 +374,9 @@ print(f"""
   更可落地的目标是分档设定：
 
     情形 A  延迟率 8.0% → 5.0%（对齐 SP 州现有水平）
-            可避免差评 {(0.0799-0.05)/0.0799*avoidable:,.0f} 条，占差评总量 {(0.0799-0.05)/0.0799*avoidable/total_bad:.1%}
+            可避免差评 {(0.08131-0.05)/0.08131*avoidable:,.0f} 条，占差评总量 {(0.08131-0.05)/0.08131*avoidable/total_bad:.1%}
     情形 B  延迟率 8.0% → 6.5%（治理延迟率最高的那批卖家与线路）
-            可避免差评 {(0.0799-0.065)/0.0799*avoidable:,.0f} 条，占差评总量 {(0.0799-0.065)/0.0799*avoidable/total_bad:.1%}
+            可避免差评 {(0.08131-0.065)/0.08131*avoidable:,.0f} 条，占差评总量 {(0.08131-0.065)/0.08131*avoidable/total_bad:.1%}
 
   做因果推断的价值在于：这个 ATT 是可以拿去向上承诺的数字。
   区别在于承诺之前知不知道它有没有被混杂因素污染——
