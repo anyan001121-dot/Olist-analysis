@@ -90,7 +90,12 @@ con.close()
 #
 # 正确做法是**扩展窗口**：每个订单只能看到该卖家在它之前完成的订单。
 # 这与线上真实可得的信息完全一致。
-df = df.sort_values(["main_seller", "purchase_ts"]).reset_index(drop=True)
+#
+# 排序带 order_id 决胜并指定 mergesort：同卖家同一秒的多笔订单若只按时间排，
+# 行序取决于输入顺序，扩展窗口的历史均值会跟着变，导致同一份代码跑两遍
+# 拿到的 AUC 在小数点后第三位漂移。
+df = df.sort_values(["main_seller", "purchase_ts", "order_id"],
+                    kind="mergesort").reset_index(drop=True)
 g = df.groupby("main_seller", sort=False)
 
 df["seller_orders"] = g.cumcount()                       # 此前已有多少单
@@ -103,7 +108,7 @@ for src, dst in [("y", "seller_bad_rate_hist"),
 before = len(df)
 df = df[df["seller_orders"] >= 5]                        # 至少 5 单历史才有参考价值
 df = df.dropna(subset=["seller_bad_rate_hist", "max_weight_g"])
-df = df.sort_values("purchase_ts").reset_index(drop=True)
+df = df.sort_values(["purchase_ts", "order_id"], kind="mergesort").reset_index(drop=True)
 
 print(f"原始订单 : {before:,}")
 print(f"建模样本 : {len(df):,}（要求主卖家此前已有 ≥5 单历史）")

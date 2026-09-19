@@ -130,8 +130,45 @@ flag("✅ [已修复]", "PSM 的 seller_late_rate_loo 已改为扩展窗口", ""
 第一版用全期均值剔除当前订单（留一法），对早期订单的卖家历史里混进了未来才发生的订单。
 03_causal_delivery.py 现改为按 purchase_ts 排序、expanding().mean().shift(1) 的扩展窗口，
 与 02_review_driver.py 的做法保持一致——每个订单只能看到该卖家在它之前完成的订单。
-修复后 PSM ATT 从 +45.05pp 变为 +44.59pp（结论方向不变，四法极差从 0.67pp 降到 0.50pp）。
+修复后 PSM ATT 从 +45.05pp 变为 +44.49pp（结论方向不变，四法极差从 0.67pp 降到 0.50pp）。
 """)
+
+
+# ============================================================ C2 排序决定性
+section("C2  扩展窗口的排序是否确定（同一份代码能否跑出同一个数字）")
+
+tie = q("""
+WITH s AS (
+    SELECT o.order_id, o.purchase_ts,
+           ARG_MAX(i.seller_id, i.item_amount) AS main_seller
+    FROM dwd_order o JOIN dwd_order_item i ON o.order_id = i.order_id
+    WHERE o.delivered_ts IS NOT NULL AND o.review_score IS NOT NULL
+      AND o.promised_days IS NOT NULL
+    GROUP BY 1, 2
+)
+SELECT
+    COUNT(*)                                                     AS 同卖家同秒的订单数,
+    COUNT(DISTINCT main_seller || '|' || CAST(purchase_ts AS VARCHAR)) AS 涉及的时间点数
+FROM s
+WHERE (main_seller, purchase_ts) IN (
+    SELECT main_seller, purchase_ts FROM s
+    GROUP BY 1, 2 HAVING COUNT(*) > 1
+)
+""").iloc[0]
+print(tie.to_frame("值").to_string())
+
+if tie["同卖家同秒的订单数"] > 0:
+    flag("✅ [已修复]", "扩展窗口的排序曾不确定，同一份代码两次运行结果不一致", f"""
+有 {int(tie['同卖家同秒的订单数']):,} 笔订单与同一卖家的另一笔订单共享完全相同的下单时间戳
+（分布在 {int(tie['涉及的时间点数']):,} 个时间点上）。原实现只按 (main_seller, purchase_ts) 排序，
+且用的是 pandas 默认的非稳定排序，这些并列行的先后完全取决于输入顺序，
+扩展窗口算出的卖家历史均值随之改变，最终 ATT 在小数点后第二位漂移
+（实际发生过：两次独立重跑分别得到 +44.74pp 和 +44.58pp）。
+修法：排序键补上 order_id 做决胜，并显式指定 kind="mergesort"（稳定排序）。
+02_review_driver.py 与 03_causal_delivery.py 均已修正，现在连跑两次输出逐字节相同。
+""")
+else:
+    flag("✅ [通过]", "不存在同卖家同秒的并列订单", "排序天然唯一，无需决胜键。")
 
 
 # ============================================================ D 负数时长敏感性
