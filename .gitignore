@@ -10,3 +10,6 @@ __pycache__/
 .ipynb_checkpoints/
 .DS_Store
 .venv/
+
+# 面试准备材料，不公开
+docs/面试话术稿.md
